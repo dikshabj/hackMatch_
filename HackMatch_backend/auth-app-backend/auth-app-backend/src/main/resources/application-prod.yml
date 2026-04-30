@@ -4,7 +4,7 @@ server:
   forward-headers-strategy: framework
 
 app:
-  frontend-url: ${FRONTEND_URL:https://hack-match-frontend.vercel.app}
+  frontend-url: ${FRONTEND_URL:https://hack-match-pied.vercel.app}
 
 # Spring Configuration
 spring:

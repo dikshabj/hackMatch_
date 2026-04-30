@@ -17,7 +17,7 @@ public class SocketIoConfig {
         config.setHostname("0.0.0.0");
         config.setPort(9092);
 
-        config.setOrigin("https://hack-match-frontend.vercel.app");
+        config.setOrigin("https://hack-match-pied.vercel.app");
 
         SocketConfig socketConfig = new SocketConfig();
 
