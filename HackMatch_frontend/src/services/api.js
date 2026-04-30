@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/v1`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -31,7 +31,7 @@ api.interceptors.response.use(
       if (refreshToken) {
         try {
           // Attempt to get new access token using refresh token in body
-          const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/refresh`, {
+          const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/refresh`, {
             refreshToken: refreshToken
           });
 
