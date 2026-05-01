@@ -47,7 +47,8 @@ const Login = () => {
   };
 
   const handleOAuthLogin = (provider) => {
-    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/oauth2/authorization/${provider}`;
+    const backendUrl = (import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '')).replace(/\/$/, '');
+    window.location.href = `${backendUrl}/oauth2/authorization/${provider}`;
   };
 
   return (
