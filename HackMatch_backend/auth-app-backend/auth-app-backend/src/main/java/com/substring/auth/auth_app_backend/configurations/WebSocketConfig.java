@@ -16,6 +16,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(chatWebSocketHandler, "/ws")
-                .setAllowedOrigins("*");
+                .setAllowedOrigins("https://hack-match-pied.vercel.app", "http://localhost:5173", "http://localhost:3000");
     }
 }
