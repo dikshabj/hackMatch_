@@ -47,6 +47,7 @@ spring:
           github:
             client-id: ${GITHUB_CLIENT_ID}
             client-secret: ${GITHUB_CLIENT_SECRET}
+            redirect-uri: "https://hackmatch-w2ni.onrender.com/login/oauth2/code/github"
             scope:
               - user:email
               - read:user

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search as SearchIcon, UserPlus, Cpu, Zap, Code, Shield, CheckCircle2 } from 'lucide-react';
+import { Search as SearchIcon, UserPlus, Cpu, Zap, Code, Shield, CheckCircle2, MessageSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import ProfileAlert from '../components/ProfileAlert';
 import toast from 'react-hot-toast';
 
 const Search = () => {
+  const navigate = useNavigate();
   const [sentRequests, setSentRequests] = useState(new Set());
   const [showProfileAlert, setShowProfileAlert] = useState(false);
   const [connectingId, setConnectingId] = useState(null);
@@ -88,6 +90,10 @@ const Search = () => {
     try {
       await api.post(`/requests/send/${userId}`, { message: "Hi! I'd like to connect on HackMatch." });
       setSentRequests(prev => new Set(prev).add(userId));
+      
+      // Update local state for immediate feedback
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, connectionStatus: 'PENDING' } : u));
+      
       toast.success('Connection Request Sent!', {
         style: {
           background: '#1a1a1a',
@@ -257,20 +263,25 @@ const Search = () => {
                 </div>
 
                 <button
-                  onClick={() => handleConnect(user.id)}
-                  disabled={connectingId === user.id || sentRequests.has(user.id)}
+                  onClick={() => user.connectionStatus === 'ACCEPTED' ? navigate('/messages') : handleConnect(user.id)}
+                  disabled={connectingId === user.id || user.connectionStatus === 'PENDING'}
                   className={`w-full py-3.5 rounded-xl border border-white/10 font-space font-bold text-xs tracking-widest text-white uppercase transition-all duration-300 relative z-10 flex items-center justify-center gap-2 disabled:opacity-50 ${
-                    sentRequests.has(user.id) ? 'bg-green-600/20 border-green-600/50 text-green-400' : 'group-hover:bg-maroon group-hover:border-maroon'
+                    user.connectionStatus === 'ACCEPTED' ? 'bg-maroon border-maroon shadow-neon' :
+                    user.connectionStatus === 'PENDING' ? 'bg-green-600/20 border-green-600/50 text-green-400' : 
+                    'group-hover:bg-maroon group-hover:border-maroon'
                   }`}
                 >
                   {connectingId === user.id 
                     ? 'Establishing Link...' 
-                    : sentRequests.has(user.id) 
-                      ? 'Awaiting Operator Response' 
-                      : 'Connect'
+                    : user.connectionStatus === 'ACCEPTED'
+                      ? 'Message'
+                      : user.connectionStatus === 'PENDING'
+                        ? 'Awaiting Operator Response' 
+                        : 'Connect'
                   }
-                  {!sentRequests.has(user.id) && <UserPlus size={14} className={connectingId === user.id ? 'animate-pulse' : ''} />}
-                  {sentRequests.has(user.id) && <CheckCircle2 size={14} />}
+                  {user.connectionStatus === 'NONE' && <UserPlus size={14} className={connectingId === user.id ? 'animate-pulse' : ''} />}
+                  {user.connectionStatus === 'PENDING' && <CheckCircle2 size={14} />}
+                  {user.connectionStatus === 'ACCEPTED' && <MessageSquare size={14} />}
                 </button>
               </motion.div>
             ))

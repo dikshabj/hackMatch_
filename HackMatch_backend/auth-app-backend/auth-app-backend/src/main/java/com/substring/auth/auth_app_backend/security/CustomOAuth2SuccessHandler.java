@@ -83,9 +83,18 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
                             return new RuntimeException("Default role ROLE_STUDENT not found. Please ensure RoleSeeder has run.");
                         });
 
-                logger.info("[STEP 4.2] Creating new user object");
+                // Generate Unique Username
+                String baseUsername = finalEmail.split("@")[0].replaceAll("[^a-zA-Z0-9]", "_");
+                String generatedUsername = baseUsername;
+                int counter = 1;
+                while (userRepository.existsByUsername(generatedUsername)) {
+                    generatedUsername = baseUsername + counter++;
+                }
+
+                logger.info("[STEP 4.2] Creating new user object with username: {}", generatedUsername);
                 user = User.builder()
                         .email(finalEmail)
+                        .username(generatedUsername)
                         .name(name)
                         .image(image)
                         .provider(provider)

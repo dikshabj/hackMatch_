@@ -8,6 +8,7 @@ import com.substring.auth.auth_app_backend.exceptions.ResourceNotFound;
 import com.substring.auth.auth_app_backend.helpers.UserHelper;
 import com.substring.auth.auth_app_backend.repositories.RoleRepository;
 import com.substring.auth.auth_app_backend.repositories.UserRepository;
+import com.substring.auth.auth_app_backend.repositories.CollaborationRepository;
 import com.substring.auth.auth_app_backend.services.AIService;
 import com.substring.auth.auth_app_backend.services.MatchService;
 import com.substring.auth.auth_app_backend.services.UserService;
@@ -31,6 +32,7 @@ public class UserServiceImpel implements UserService {
     private final RoleRepository roleRepository;
     private final AIService aiService;
     private final MatchService matchService;
+    private final CollaborationRepository collaborationRepository;
 
 
 
@@ -58,6 +60,22 @@ public class UserServiceImpel implements UserService {
         Role assignedRole = roleRepository.findByName(roleName)
             .orElseThrow(() -> new ResourceNotFound("Role not found: " + roleName));
         user.setRoles(Set.of(assignedRole));
+
+        // Handle Username
+        if (userDto.getUsername() == null || userDto.getUsername().isBlank()) {
+            String baseUsername = userDto.getEmail().split("@")[0].replaceAll("[^a-zA-Z0-9]", "_");
+            String generatedUsername = baseUsername;
+            int counter = 1;
+            while (userRepository.existsByUsername(generatedUsername)) {
+                generatedUsername = baseUsername + counter++;
+            }
+            user.setUsername(generatedUsername);
+        } else {
+            if (userRepository.existsByUsername(userDto.getUsername())) {
+                throw new IllegalArgumentException("Username already exists!");
+            }
+            user.setUsername(userDto.getUsername());
+        }
 
         user.setProvider(userDto.getProvider()!= null ? userDto.getProvider(): Provider.LOCAL);
         //role assign to new user for authorization
@@ -102,6 +120,12 @@ public class UserServiceImpel implements UserService {
 
         //fields update krna
         if(userDto.getName() != null) existingUser.setName(userDto.getName());
+        if(userDto.getUsername() != null && !userDto.getUsername().equals(existingUser.getUsername())) {
+            if(userRepository.existsByUsername(userDto.getUsername())) {
+                throw new IllegalArgumentException("Username already exists!");
+            }
+            existingUser.setUsername(userDto.getUsername());
+        }
         if(userDto.getImage() != null) existingUser.setImage(userDto.getImage());
 
         //new fields update
@@ -127,10 +151,23 @@ public class UserServiceImpel implements UserService {
     }
 
     @Override
-    public List<UserDto> findTeammatesBySkills(String query){
+    public List<UserDto> findTeammatesBySkills(String query, String currentUserEmail){
+        User currentUser = userRepository.findByEmail(currentUserEmail).orElse(null);
+        
         return userRepository.findBySkillsOrName(query)
                 .stream()
-                .map(user -> modelMapper.map(user , UserDto.class))
+                .filter(user -> !user.getEmail().equals(currentUserEmail))
+                .map(user -> {
+                    UserDto dto = modelMapper.map(user , UserDto.class);
+                    if (currentUser != null) {
+                        collaborationRepository.findRequestBetweenUsers(currentUser, user)
+                            .ifPresentOrElse(
+                                request -> dto.setConnectionStatus(request.getStatus().name()),
+                                () -> dto.setConnectionStatus("NONE")
+                            );
+                    }
+                    return dto;
+                })
                 .toList();
     }
 
@@ -152,11 +189,18 @@ public class UserServiceImpel implements UserService {
         // 3. AI se ranking karwa kar return karein! ✅
         List<UserDto> ranked = aiService.rankTeammatesWithAI(currentUserDto, candidates);
         
-        // 4. Match reasons add karein
+        // 4. Match reasons & Connection Status add karein
         ranked.forEach(dto -> {
             User other = userRepository.findById(dto.getId()).orElse(null);
             if (other != null) {
                 dto.setMatchReason(matchService.getMatchReason(currentUser, other));
+                
+                // Connection status check
+                collaborationRepository.findRequestBetweenUsers(currentUser, other)
+                        .ifPresentOrElse(
+                            request -> dto.setConnectionStatus(request.getStatus().name()),
+                            () -> dto.setConnectionStatus("NONE")
+                        );
             }
         });
         

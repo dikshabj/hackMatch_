@@ -21,5 +21,5 @@ public interface UserService {
 
   List<UserDto> getSuggestedTeammates(String currentUserEmail);
 
-  List<UserDto> findTeammatesBySkills(String query);
+  List<UserDto> findTeammatesBySkills(String query, String currentUserEmail);
 }

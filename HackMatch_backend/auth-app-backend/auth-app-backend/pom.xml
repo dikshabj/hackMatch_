@@ -166,16 +166,6 @@
 					</excludes>
 				</configuration>
 			</plugin>
-
-			<plugin>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-maven-plugin</artifactId>
-    <configuration>
-        <environmentVariables>
-            <MY_VAR>value</MY_VAR>
-        </environmentVariables>
-    </configuration>
-</plugin>
 		</plugins>
 	</build>
 

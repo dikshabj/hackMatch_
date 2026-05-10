@@ -17,6 +17,7 @@ public class UserDto {
 
     private UUID id;
     private String email;
+    private String username;
     private String name;
     private String password;
     private String image;
@@ -40,4 +41,7 @@ public class UserDto {
 
     // Transient field for AI match explanation
     private String matchReason;
+    
+    // Transient field for connection status with current user
+    private String connectionStatus; // PENDING, ACCEPTED, REJECTED, NONE
 }

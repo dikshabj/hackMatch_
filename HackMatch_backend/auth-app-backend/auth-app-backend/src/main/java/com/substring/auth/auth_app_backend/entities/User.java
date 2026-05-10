@@ -24,6 +24,8 @@ public class User implements UserDetails {
     private UUID id;
     @Column(name = "user_email", unique = true)
     private String email;
+    @Column(name = "username", unique = true)
+    private String username;
     @Column(name = "user_name", length = 500)
     private String name;
     private String password;
