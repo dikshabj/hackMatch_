@@ -35,24 +35,21 @@ const Messages = () => {
   }, [selectedContact]);
 
   useEffect(() => {
-    if (socket) {
-      socket.on('receive_message', (data) => {
-        // If the message is from the person we are currently chatting with
-        if (selectedContact && data.senderId === selectedContact.otherUser.id) {
-          setMessages(prev => [...prev, {
-            id: data.id,
-            senderId: data.senderId,
-            content: data.content,
-            timestamp: data.timestamp
-          }]);
-        }
-        // Also update contact preview (optional logic can be added here)
-      });
-    }
-    return () => {
-      if (socket) socket.off('receive_message');
+    const handleSocketMessage = (event) => {
+      const data = event.detail;
+      // If the message is from the person we are currently chatting with
+      if (selectedContact && (data.senderId === selectedContact.otherUser.id || data.receiverId === selectedContact.otherUser.id)) {
+        // Avoid duplicates if it's our own message being echoed (though backend shouldn't echo)
+        setMessages(prev => {
+            if (prev.some(m => m.id === data.id)) return prev;
+            return [...prev, data];
+        });
+      }
     };
-  }, [socket, selectedContact]);
+
+    window.addEventListener('socket_message', handleSocketMessage);
+    return () => window.removeEventListener('socket_message', handleSocketMessage);
+  }, [selectedContact]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -65,12 +62,14 @@ const Messages = () => {
       const contactsMap = new Map();
       
       res.data.forEach(req => {
+        if (!req.sender || !req.receiver || !user) return;
+        
         const otherUser = req.sender.id === user.id ? req.receiver : req.sender;
-        if (!contactsMap.has(otherUser.id)) {
+        if (otherUser && !contactsMap.has(otherUser.id)) {
             contactsMap.set(otherUser.id, { 
                 id: req.id, 
                 otherUser, 
-                lastMessage: "Secure link established",
+                lastMessage: "Neural link secured",
                 timestamp: req.createdAt
             });
         }
@@ -95,20 +94,26 @@ const Messages = () => {
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !selectedContact || !socket) return;
+    if (!newMessage.trim() || !selectedContact || !socket || socket.readyState !== WebSocket.OPEN) {
+        if (socket?.readyState !== WebSocket.OPEN) {
+            toast.error("Neural link unstable. Reconnecting...");
+        }
+        return;
+    }
 
     const messageData = {
       senderId: user.id,
       receiverId: selectedContact.otherUser.id,
-      content: newMessage.trim()
+      content: newMessage.trim(),
+      type: 'CHAT'
     };
 
-    // Send via socket
-    socket.emit('send_message', messageData);
+    // Send via standard WebSocket
+    socket.send(JSON.stringify(messageData));
 
     // Optimistically update UI
     setMessages(prev => [...prev, {
-      id: Date.now(), // Temporary ID
+      id: Date.now().toString(), // Temporary ID
       senderId: user.id,
       content: newMessage.trim(),
       timestamp: new Date().toISOString()

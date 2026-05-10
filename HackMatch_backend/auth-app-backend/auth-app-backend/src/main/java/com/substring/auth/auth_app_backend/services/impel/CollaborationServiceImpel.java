@@ -1,6 +1,6 @@
 package com.substring.auth.auth_app_backend.services.impel;
 
-import com.substring.auth.auth_app_backend.configurations.SocketHandler;
+import com.substring.auth.auth_app_backend.configurations.ChatWebSocketHandler;
 
 import com.substring.auth.auth_app_backend.dtos.CollaborationRequestDto;
 import com.substring.auth.auth_app_backend.entities.CollaborationRequest;
@@ -24,7 +24,7 @@ public class CollaborationServiceImpel implements CollaborationService {
     private final CollaborationRepository collaborationRepository;
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
-    private final SocketHandler socketHandler;
+    private final ChatWebSocketHandler socketHandler;
     private final NotificationService notificationService;
 
     @Override

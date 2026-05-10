@@ -129,11 +129,10 @@
     <version>2.25.26</version>
 </dependency>
 
-<!-- Netty-SocketIO for Real-time Messaging -->
+<!-- Standard WebSocket for Real-time Messaging (Compatible with Render) -->
 <dependency>
-    <groupId>com.corundumstudio.socketio</groupId>
-    <artifactId>netty-socketio</artifactId>
-    <version>2.0.12</version>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-websocket</artifactId>
 </dependency>
 
 

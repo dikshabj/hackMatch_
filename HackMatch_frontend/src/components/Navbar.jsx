@@ -179,6 +179,24 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
+            <Link
+                to="/notifications"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-4 text-white font-orbitron text-sm uppercase tracking-widest"
+              >
+                <Bell className="text-maroon" />
+                Notifications {unreadCount > 0 && `(${unreadCount})`}
+            </Link>
+            <button
+                onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleLogout();
+                }}
+                className="flex items-center gap-4 text-maroon font-orbitron text-sm uppercase tracking-widest"
+              >
+                <LogOut />
+                Logout
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

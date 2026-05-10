@@ -1,6 +1,6 @@
 package com.substring.auth.auth_app_backend.services.impel;
 
-import com.substring.auth.auth_app_backend.configurations.SocketHandler;
+import com.substring.auth.auth_app_backend.configurations.ChatWebSocketHandler;
 import com.substring.auth.auth_app_backend.dtos.NotificationDto;
 import com.substring.auth.auth_app_backend.entities.Notification;
 import com.substring.auth.auth_app_backend.entities.User;
@@ -22,7 +22,7 @@ public class NotificationServiceImpel implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
-    private final SocketHandler socketHandler;
+    private final ChatWebSocketHandler socketHandler;
 
     @Override
     public void createNotification(User recipient, String title, String message, String type, String actionUrl) {

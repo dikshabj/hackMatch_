@@ -22,21 +22,25 @@ export const SocketProvider = ({ children, userId }) => {
       return;
     }
 
-    // Connect to Backend Socket.io server
-    const newSocket = io(import.meta.env.VITE_BACKEND_URL, {
-      query: { userId },
-      reconnectionAttempts: 5,
-      transports: ['websocket', 'polling']
-    });
+    // Connect to Backend WebSocket server (Native)
+    // Convert https to wss or http to ws
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
+    const wsUrl = backendUrl.replace(/^http/, 'ws') + '/ws?userId=' + userId;
+    
+    console.log('🔗 Attempting connection to:', wsUrl);
+    const newSocket = new WebSocket(wsUrl);
 
     setSocket(newSocket);
 
     // listeners
-    newSocket.on('connect', () => {
+    newSocket.onopen = () => {
       console.log('✅ Connected to Real-time server');
-    });
+    };
 
-    newSocket.on('notification', (data) => {
+    newSocket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log('📩 New Message/Notification:', data);
+      
       if (data.type === 'CONNECTION_ACCEPTED') {
         toast.success(data.message || "Request Accepted!", {
           duration: 6000,
@@ -49,11 +53,15 @@ export const SocketProvider = ({ children, userId }) => {
           },
         });
       }
-    });
+      
+      // Emit event for listeners in components
+      const customEvent = new CustomEvent('socket_message', { detail: data });
+      window.dispatchEvent(customEvent);
+    };
 
-    newSocket.on('connect_error', (error) => {
+    newSocket.onerror = (error) => {
       console.error('Socket Connection Error:', error);
-    });
+    };
 
     return () => {
       newSocket.close();
