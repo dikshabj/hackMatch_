@@ -15,6 +15,9 @@ public class DatabaseInit {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private com.substring.auth.auth_app_backend.repositories.RoleRepository roleRepository;
+
     @PostConstruct
     public void init() {
         try {
@@ -23,13 +26,13 @@ public class DatabaseInit {
             jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS users_skills (" +
                     "user_id binary(16) NOT NULL, " +
                     "skill varchar(255))");
-            logger.info("Successfully ensured users_skills table exists.");
-
-            // Seed Roles
+            
+            // Seed Roles Safely using Repository
             seedRole("ROLE_STUDENT");
             seedRole("ROLE_ORGANIZER");
             seedRole("ROLE_SPONSOR");
-
+            
+            logger.info("Database initialization completed successfully.");
         } catch (Exception e) {
             logger.error("Failed to initialize database: ", e);
         }
@@ -37,12 +40,12 @@ public class DatabaseInit {
 
     private void seedRole(String roleName) {
         try {
-            Integer count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM roles WHERE name = ?", Integer.class, roleName);
-            
-            if (count == null || count == 0) {
-                jdbcTemplate.update("INSERT INTO roles (id, name) VALUES (?, ?)", 
-                    java.util.UUID.randomUUID().toString(), roleName);
+            if (roleRepository.findByName(roleName).isEmpty()) {
+                com.substring.auth.auth_app_backend.entities.Role role = 
+                    com.substring.auth.auth_app_backend.entities.Role.builder()
+                        .name(roleName)
+                        .build();
+                roleRepository.save(role);
                 logger.info("Seeded role: {}", roleName);
             }
         } catch (Exception e) {
