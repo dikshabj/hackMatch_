@@ -55,22 +55,10 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
                 provider = Provider.GOOGLE;
                 providerId = oauthUser.getAttribute("sub");
                 image = oauthUser.getAttribute("picture");
-            } else if (registrationId.equalsIgnoreCase("github")) {
-                provider = Provider.GITHUB;
-                providerId = String.valueOf(oauthUser.getAttribute("id"));
-                image = oauthUser.getAttribute("avatar_url");
-                if (name == null) {
-                    name = login;
-                }
-                // GitHub email is often null if private
-                if (email == null) {
-                    email = login + "@github.com";
-                    logger.warn("[STEP 2] GitHub Email is private, using generated email: {}", email);
-                }
             }
 
             if (email == null || email.isEmpty()) {
-                throw new RuntimeException("Could not retrieve email from " + registrationId + ". Please make sure your email is public in GitHub settings.");
+                throw new RuntimeException("Could not retrieve email from " + registrationId + ". Please make sure your email is public in settings.");
             }
 
             logger.info("[STEP 3] Final Identity: {} ({})", email, name);

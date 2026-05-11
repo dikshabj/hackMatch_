@@ -137,13 +137,6 @@ const Login = () => {
           <div className="space-y-3 mt-6">
             <button
               type="button"
-              onClick={() => handleOAuthLogin('github')}
-              className="w-full py-3 rounded-xl border border-white/10 flex items-center justify-center gap-3 text-sm font-space font-bold hover:bg-white/5 transition-all"
-            >
-              AUTHENTICATE WITH GITHUB
-            </button>
-            <button
-              type="button"
               onClick={() => handleOAuthLogin('google')}
               className="w-full py-3 rounded-xl border border-white/10 flex items-center justify-center gap-3 text-sm font-space font-bold hover:bg-white/5 transition-all"
             >
