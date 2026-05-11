@@ -9,9 +9,9 @@ app:
 # Spring Configuration
 spring:
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: "${DB_URL}"
+    username: "${DB_USERNAME}"
+    password: "${DB_PASSWORD}"
     driver-class-name: com.mysql.cj.jdbc.Driver
     
   mail:
@@ -39,14 +39,14 @@ spring:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
+            client-id: "${GOOGLE_CLIENT_ID}"
+            client-secret: "${GOOGLE_CLIENT_SECRET}"
             scope:
               - email
               - profile
           github:
-            client-id: ${GITHUB_CLIENT_ID}
-            client-secret: ${GITHUB_CLIENT_SECRET}
+            client-id: "${GITHUB_CLIENT_ID}"
+            client-secret: "${GITHUB_CLIENT_SECRET}"
             redirect-uri: "https://hackmatch-w2ni.onrender.com/login/oauth2/code/github"
             scope:
               - user:email
@@ -59,7 +59,7 @@ logging:
 # JWT Configuration using Environment Variables
 security:
   jwt:
-    secret: ${JWT_SECRET}
+    secret: "${JWT_SECRET}"
     issuer: ${JWT_ISSUER:api.substring.com}
     access-ttl-seconds: ${JWT_ACCESS_TTL_SECONDS:18000}
     refresh-ttl-seconds: ${JWT_REFRESH_TTL_SECONDS:604800}
