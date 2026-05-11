@@ -26,14 +26,12 @@ public class JwtService {
     private final String issuer;
 
     public JwtService(
-            @Value("${security.jwt.secret}") Object secretObj,
+            @Value("#{'${security.jwt.secret}'}") String secret,
             @Value("${security.jwt.access-ttl-seconds}") long accessTtlSeconds,
             @Value("${security.jwt.refresh-ttl-seconds}") long refreshTtlSeconds,
             @Value("${security.jwt.issuer}") String issuer
     ) {
-        String secret = String.valueOf(secretObj);
-        
-        if (secret == null || secret.length() < 32) {
+        if (secret == null || secret.trim().isEmpty() || secret.length() < 32) {
             throw new IllegalArgumentException("Secret key must be at least 32 characters for HS256");
         }
 
