@@ -45,6 +45,7 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             
             String email = oauthUser.getAttribute("email");
             String name = oauthUser.getAttribute("name");
+            String login = oauthUser.getAttribute("login");
             String image = "";
             String providerId = "";
 
@@ -59,16 +60,20 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
                 providerId = String.valueOf(oauthUser.getAttribute("id"));
                 image = oauthUser.getAttribute("avatar_url");
                 if (name == null) {
-                    name = oauthUser.getAttribute("login");
+                    name = login;
                 }
-                // GitHub fallback for email if private
+                // GitHub email is often null if private
                 if (email == null) {
-                    email = oauthUser.getAttribute("login") + "@github.com";
-                    logger.warn("[STEP 2] GitHub Email is private, using fallback: {}", email);
+                    email = login + "@github.com";
+                    logger.warn("[STEP 2] GitHub Email is private, using generated email: {}", email);
                 }
             }
 
-            logger.info("[STEP 3] Final Email: {}", email);
+            if (email == null || email.isEmpty()) {
+                throw new RuntimeException("Could not retrieve email from " + registrationId + ". Please make sure your email is public in GitHub settings.");
+            }
+
+            logger.info("[STEP 3] Final Identity: {} ({})", email, name);
 
             // Logic to find or create user
             final String finalEmail = email;
@@ -77,11 +82,13 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
 
             if (user == null) {
                 logger.info("[STEP 4.1] User not found, fetching ROLE_STUDENT");
-                Role userRole = roleRepository.findByName(Role.STUDENT)
-                        .orElseThrow(() -> {
-                            logger.error("[ERROR] ROLE_STUDENT not found in database!");
-                            return new RuntimeException("Default role ROLE_STUDENT not found. Please ensure RoleSeeder has run.");
-                        });
+                Role userRole = roleRepository.findByName(Role.STUDENT).orElse(null);
+                
+                if (userRole == null) {
+                    logger.warn("[WARNING] ROLE_STUDENT not found! Creating it now...");
+                    userRole = Role.builder().name(Role.STUDENT).build();
+                    userRole = roleRepository.save(userRole);
+                }
 
                 // Generate Unique Username
                 String baseUsername = finalEmail.split("@")[0].replaceAll("[^a-zA-Z0-9]", "_");
