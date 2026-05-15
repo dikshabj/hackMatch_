@@ -25,6 +25,34 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
+const XPProgressBar = ({ xp, rank }) => {
+  const ranks = {
+    Rookie: 1000,
+    Apprentice: 3000,
+    Expert: 7000,
+    Grandmaster: 15000,
+    Legend: 30000
+  };
+  const nextXP = ranks[rank] || 1000;
+  const progress = Math.min((xp / nextXP) * 100, 100);
+
+  return (
+    <div className="mt-4">
+      <div className="flex justify-between text-[10px] font-space text-gray-500 mb-1">
+        <span className="uppercase tracking-widest">XP: {xp}</span>
+        <span className="uppercase tracking-widest">Target: {nextXP}</span>
+      </div>
+      <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+        <motion.div 
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          className="h-full bg-maroon shadow-[0_0_10px_rgba(128,0,0,0.8)]"
+        />
+      </div>
+    </div>
+  );
+};
+
 const Profile = () => {
   const { fetchUser } = useAuth();
   const navigate = useNavigate();
@@ -44,6 +72,11 @@ const Profile = () => {
     try {
       const res = await api.get('/users/me');
       setUserData(res.data);
+      
+      // Auto-sync stats if usernames are present
+      if (res.data.githubUsername || res.data.leetcodeUsername) {
+        handleSync();
+      }
     } catch (err) {
       console.error('Failed to load profile:', err);
       if (err.response?.status === 401) {
@@ -52,6 +85,18 @@ const Profile = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSync = async () => {
+    try {
+      const res = await api.post('/users/sync');
+      setUserData(res.data);
+      toast.success("Neural Stats Synchronized", {
+        style: { background: '#1e293b', color: '#fff', fontSize: '10px', fontFamily: 'Space Grotesk' }
+      });
+    } catch (err) {
+      console.error('Sync failed:', err);
     }
   };
 
@@ -145,14 +190,24 @@ const Profile = () => {
           </motion.div>
           
           {!isEditing && (
-            <motion.button
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsEditing(true)}
-              className="px-8 py-3 bg-white/5 border border-white/10 rounded-2xl font-space font-bold text-xs text-white flex items-center gap-3 hover:bg-white/10 transition-all hover:border-maroon shadow-2xl backdrop-blur-md"
-            >
-              <Edit3 size={16} className="text-maroon" /> CALIBRATE PROFILE
-            </motion.button>
+            <div className="flex gap-4">
+               <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleSync()}
+                className="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl font-space font-bold text-[10px] text-gray-400 flex items-center gap-2 hover:text-white transition-all"
+              >
+                <Zap size={14} className="text-maroon" /> SYNC NEURAL DATA
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsEditing(true)}
+                className="px-8 py-3 bg-white/5 border border-white/10 rounded-2xl font-space font-bold text-xs text-white flex items-center gap-3 hover:bg-white/10 transition-all hover:border-maroon shadow-2xl backdrop-blur-md"
+              >
+                <Edit3 size={16} className="text-maroon" /> CALIBRATE PROFILE
+              </motion.button>
+            </div>
           )}
         </div>
 
@@ -162,9 +217,11 @@ const Profile = () => {
                 <motion.div 
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="glass-card p-8 border-white/5 bg-white/[0.02] backdrop-blur-3xl text-center relative"
+                    className="glass-card p-8 border-white/5 bg-white/[0.02] backdrop-blur-3xl relative overflow-hidden"
                 >
-                    <div className="relative inline-block group mb-6">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-maroon to-transparent opacity-50" />
+                    
+                    <div className="relative inline-block group mb-6 w-full">
                         <div className="w-40 h-40 rounded-3xl overflow-hidden border-2 border-white/10 group-hover:border-maroon transition-colors shadow-2xl mx-auto bg-gradient-to-br from-white/5 to-white/[0.02]">
                             {userData.image ? (
                                 <img src={userData.image} alt="Profile" className="w-full h-full object-cover" />
@@ -192,21 +249,28 @@ const Profile = () => {
                         />
                     </div>
                     
-                    <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-1">{userData.name}</h2>
-                    <p className="text-maroon font-space text-[10px] font-bold uppercase tracking-widest mb-6">
-                        {userData.preferredRole || "Undefined Class"}
-                    </p>
+                    <div className="text-center">
+                        <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-1">{userData.name}</h2>
+                        <p className="text-maroon font-space text-[10px] font-bold uppercase tracking-widest mb-6">
+                            {userData.preferredRole || "Undefined Class"}
+                        </p>
+                    </div>
 
                     <div className="space-y-4 pt-6 border-t border-white/5">
                         <div className="flex justify-between items-center text-xs">
-                            <span className="text-gray-500 font-space uppercase">Rank</span>
-                            <span className="text-white font-bold">{userData.experienceLevel || "Operative"}</span>
+                            <span className="text-gray-500 font-space uppercase">Tier</span>
+                            <span className="px-3 py-1 bg-maroon/20 border border-maroon/30 rounded-lg text-white font-bold text-[10px] uppercase tracking-tighter">
+                                {userData.rank || "Rookie"}
+                            </span>
                         </div>
-                        <div className="flex justify-between items-center text-xs">
-                            <span className="text-gray-500 font-space uppercase">Availability</span>
-                            <span className={`font-bold flex items-center gap-2 ${userData.available ? 'text-green-500' : 'text-red-500'}`}>
-                                {userData.available ? <CheckCircle2 size={12} /> : <Circle size={10} />}
-                                {userData.available ? "Ready" : "Busy"}
+                        
+                        <XPProgressBar xp={userData.xp || 0} rank={userData.rank || "Rookie"} />
+
+                        <div className="flex justify-between items-center text-xs pt-2">
+                            <span className="text-gray-500 font-space uppercase">Link State</span>
+                            <span className={`font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 ${userData.status === 'AVAILABLE' ? 'text-green-500' : 'text-orange-500'}`}>
+                                <div className={`w-2 h-2 rounded-full animate-pulse ${userData.status === 'AVAILABLE' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-orange-500'}`} />
+                                {userData.status?.replace('_', ' ') || "READY"}
                             </span>
                         </div>
                     </div>
@@ -241,6 +305,52 @@ const Profile = () => {
                             exit={{ opacity: 0, x: -20 }}
                             className="space-y-8"
                         >
+                            {/* Dashboard Stats */}
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <motion.div whileHover={{ y: -5 }} className="glass-card p-6 border-white/5 bg-gradient-to-br from-white/[0.03] to-transparent">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="p-2 bg-maroon/20 rounded-lg text-maroon">
+                                            <GithubIcon size={18} />
+                                        </div>
+                                        <h3 className="text-[10px] font-space font-bold text-gray-300 uppercase tracking-widest">GitHub Intel</h3>
+                                    </div>
+                                    <div className="flex justify-around">
+                                        <div className="text-center">
+                                            <p className="text-3xl font-black text-white">{userData.githubStats?.repos || 0}</p>
+                                            <p className="text-[9px] text-gray-500 font-space uppercase">Repos</p>
+                                        </div>
+                                        <div className="h-10 w-[1px] bg-white/10 self-center" />
+                                        <div className="text-center">
+                                            <p className="text-3xl font-black text-white">{userData.githubStats?.followers || 0}</p>
+                                            <p className="text-[9px] text-gray-500 font-space uppercase">Followers</p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+
+                                <motion.div whileHover={{ y: -5 }} className="glass-card p-6 border-white/5 bg-gradient-to-br from-white/[0.03] to-transparent">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="p-2 bg-yellow-500/10 rounded-lg text-yellow-500">
+                                            <Code size={18} />
+                                        </div>
+                                        <h3 className="text-[10px] font-space font-bold text-gray-300 uppercase tracking-widest">LeetCode Mastery</h3>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <div className="p-2 bg-green-500/5 rounded-xl text-center border border-green-500/10">
+                                            <p className="text-lg font-black text-green-500">{userData.leetcodeStats?.easy || 0}</p>
+                                            <p className="text-[8px] text-gray-500 font-bold">EASY</p>
+                                        </div>
+                                        <div className="p-2 bg-yellow-500/5 rounded-xl text-center border border-yellow-500/10">
+                                            <p className="text-lg font-black text-yellow-500">{userData.leetcodeStats?.medium || 0}</p>
+                                            <p className="text-[8px] text-gray-500 font-bold">MID</p>
+                                        </div>
+                                        <div className="p-2 bg-red-500/5 rounded-xl text-center border border-red-500/10">
+                                            <p className="text-lg font-black text-red-500">{userData.leetcodeStats?.hard || 0}</p>
+                                            <p className="text-[8px] text-gray-500 font-bold">HARD</p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </div>
+
                             <div className="glass-card p-8 border-white/5 bg-white/[0.02]">
                                 <h3 className="text-[10px] font-space font-bold text-maroon uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
                                     <Terminal size={14} /> Operational Bio
@@ -273,7 +383,7 @@ const Profile = () => {
                                         </div>
                                         <div className="flex items-center gap-4 text-gray-400">
                                             <Zap size={16} className="text-maroon" />
-                                            <span>Linkability: <b className="text-white">{userData.available ? "Accepting Incoming Sessions" : "Encryption Mode Only"}</b></span>
+                                            <span>Encryption: <b className="text-white">{userData.status === 'DEEP_WORK' ? "Maximum (Hiding)" : "Standard"}</b></span>
                                         </div>
                                     </div>
                                 </div>
@@ -314,6 +424,33 @@ const Profile = () => {
                                                 <option value="Machine Learning">Pattern Recognition / ML</option>
                                             </select>
                                         </div>
+                                    </div>
+                                </section>
+
+                                <section className="grid md:grid-cols-2 gap-8">
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-space font-bold uppercase tracking-widest text-gray-500 flex items-center gap-2">
+                                            <GithubIcon size={12} /> GitHub Username
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            value={userData.githubUsername || ''} 
+                                            onChange={e => setUserData({...userData, githubUsername: e.target.value})}
+                                            placeholder="Your GitHub handle"
+                                            className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white font-inter text-sm focus:border-maroon focus:outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-space font-bold uppercase tracking-widest text-gray-500 flex items-center gap-2">
+                                            <Code size={12} /> LeetCode Username
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            value={userData.leetcodeUsername || ''} 
+                                            onChange={e => setUserData({...userData, leetcodeUsername: e.target.value})}
+                                            placeholder="Your LeetCode handle"
+                                            className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white font-inter text-sm focus:border-maroon focus:outline-none transition-all"
+                                        />
                                     </div>
                                 </section>
 
@@ -367,38 +504,20 @@ const Profile = () => {
                                     </div>
                                 </section>
 
-                                <section className="grid md:grid-cols-2 gap-8">
+                                <section className="grid md:grid-cols-1 gap-8">
                                     <div className="space-y-3">
-                                        <label className="text-[10px] font-space font-bold uppercase tracking-widest text-gray-500">Rank (XP Level)</label>
-                                        <select 
-                                            value={userData.experienceLevel} 
-                                            onChange={e => setUserData({...userData, experienceLevel: e.target.value})}
-                                            className="w-full bg-[#0d0d0d] border border-white/10 rounded-2xl p-4 text-white font-inter text-sm focus:border-maroon focus:outline-none transition-all"
-                                        >
-                                            <option value="Intern">Intern / Rookie</option>
-                                            <option value="Junior">Junior Operative</option>
-                                            <option value="Intermediate">Mid-Level Operator</option>
-                                            <option value="Senior">Senior Specialist</option>
-                                            <option value="Lead">Lead Architect</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-space font-bold uppercase tracking-widest text-gray-500">Collaboration Mode</label>
-                                        <div className="flex gap-4">
-                                            <button 
-                                                type="button"
-                                                onClick={() => setUserData({...userData, available: true})}
-                                                className={`flex-1 p-4 rounded-2xl border transition-all text-[10px] font-space font-bold uppercase ${userData.available ? 'bg-maroon/20 border-maroon text-white shadow-neon' : 'bg-white/5 border-white/10 text-gray-500'}`}
-                                            >
-                                                Open Session
-                                            </button>
-                                            <button 
-                                                type="button"
-                                                onClick={() => setUserData({...userData, available: false})}
-                                                className={`flex-1 p-4 rounded-2xl border transition-all text-[10px] font-space font-bold uppercase ${!userData.available ? 'bg-white/10 border-white/30 text-white' : 'bg-white/5 border-white/10 text-gray-500'}`}
-                                            >
-                                                Encrypted
-                                            </button>
+                                        <label className="text-[10px] font-space font-bold uppercase tracking-widest text-gray-500">Collaboration State</label>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            {['AVAILABLE', 'BUSY', 'HACKING', 'DEEP_WORK'].map((status) => (
+                                                <button 
+                                                    key={status}
+                                                    type="button"
+                                                    onClick={() => setUserData({...userData, status})}
+                                                    className={`p-4 rounded-2xl border transition-all text-[10px] font-space font-bold uppercase ${userData.status === status ? 'bg-maroon/20 border-maroon text-white shadow-neon' : 'bg-white/5 border-white/10 text-gray-500'}`}
+                                                >
+                                                    {status.replace('_', ' ')}
+                                                </button>
+                                            ))}
                                         </div>
                                     </div>
                                 </section>

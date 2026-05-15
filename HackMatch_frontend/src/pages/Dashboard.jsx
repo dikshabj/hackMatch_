@@ -77,6 +77,20 @@ const Dashboard = () => {
       );
   }
 
+  const handleSync = async () => {
+    try {
+      setLoading(true);
+      const res = await api.post('/users/sync');
+      setUser(res.data);
+      alert("Sync complete! Your GitHub and LeetCode stats are updated.");
+    } catch (err) {
+      console.error("Sync failed", err);
+      alert("Sync failed! Check your usernames in profile settings.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen pt-28 pb-20 px-6 relative overflow-hidden">
       {/* Background Decor */}
@@ -84,7 +98,7 @@ const Dashboard = () => {
       <div className="absolute bottom-0 -left-1/4 w-96 h-96 bg-maroon/5 blur-[120px] rounded-full -z-10" />
 
       <div className="max-w-7xl mx-auto">
-        <header className="mb-12">
+        <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -94,6 +108,16 @@ const Dashboard = () => {
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /> System status: Operational
             </p>
           </motion.div>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleSync}
+            className="flex items-center gap-2 px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-xs font-space font-bold uppercase tracking-widest hover:bg-maroon hover:text-white transition-all shadow-neon-sm"
+          >
+            <Zap size={16} />
+            Sync Intelligence
+          </motion.button>
         </header>
 
         {/* Stats Grid */}

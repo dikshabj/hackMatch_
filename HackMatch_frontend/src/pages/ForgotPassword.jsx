@@ -19,7 +19,9 @@ const ForgotPassword = () => {
     setLoading(true);
     setMessage({ type: '', text: '' });
     try {
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/forgot-password?email=${email}`);
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/forgot-password`, null, {
+        params: { email: email.trim() }
+      });
       setMessage({ type: 'success', text: 'OTP sent successfully to your email!' });
       setStep(2);
     } catch (error) {
@@ -35,7 +37,9 @@ const ForgotPassword = () => {
     setLoading(true);
     setMessage({ type: '', text: '' });
     try {
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/verify-otp?email=${email}&otp=${otp}`);
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/verify-otp`, null, {
+        params: { email: email.trim(), otp: otp.trim() }
+      });
       setMessage({ type: 'success', text: 'OTP verified! Now reset your password.' });
       setStep(3);
     } catch (error) {
@@ -55,7 +59,11 @@ const ForgotPassword = () => {
     setLoading(true);
     setMessage({ type: '', text: '' });
     try {
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/reset-password?email=${email}&otp=${otp}&newPassword=${newPassword}`);
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/reset-password`, {
+        email: email.trim(),
+        otp,
+        newPassword
+      });
       setMessage({ type: 'success', text: 'Password reset successful! Redirecting to login...' });
       setTimeout(() => navigate('/login'), 2000);
     } catch (error) {
@@ -135,7 +143,7 @@ const ForgotPassword = () => {
                   placeholder="name@example.com"
                   className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white focus:border-maroon focus:ring-1 focus:ring-maroon outline-none transition-all"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value.trim())}
                 />
               </div>
               <button disabled={loading} type="submit" className="w-full btn-maroon py-3 flex items-center justify-center gap-2">

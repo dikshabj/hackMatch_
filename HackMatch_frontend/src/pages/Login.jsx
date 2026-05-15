@@ -83,7 +83,7 @@ const Login = () => {
                   type="email"
                   placeholder="name@nexus.com"
                   className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-maroon/50 focus:bg-maroon/5 transition-all font-inter text-sm"
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value.trim() })}
                   required
                 />
               </div>
