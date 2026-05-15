@@ -133,6 +133,13 @@ public class UserServiceImpel implements UserService {
         if(userDto.getSkills() != null && !userDto.getSkills().isEmpty()) existingUser.setSkills(userDto.getSkills());
         if(userDto.getGithubLink() != null) existingUser.setGithubLink(userDto.getGithubLink());
         if(userDto.getLinkedinLink() != null ) existingUser.setLinkedinLink(userDto.getLinkedinLink());
+        
+        // Missing fields fix
+        if(userDto.getGithubUsername() != null) existingUser.setGithubUsername(userDto.getGithubUsername());
+        if(userDto.getLeetcodeUsername() != null) existingUser.setLeetcodeUsername(userDto.getLeetcodeUsername());
+        if(userDto.getPreferredRole() != null) existingUser.setPreferredRole(userDto.getPreferredRole());
+        if(userDto.getStatus() != null) existingUser.setStatus(userDto.getStatus());
+        if(userDto.getPortfolioLink() != null) existingUser.setPortfolioLink(userDto.getPortfolioLink());
 
         existingUser.setUpdatedAt(Instant.now());
 

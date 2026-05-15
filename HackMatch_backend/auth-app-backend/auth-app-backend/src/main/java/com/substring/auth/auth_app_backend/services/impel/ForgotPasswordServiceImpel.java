@@ -27,7 +27,7 @@ public class ForgotPasswordServiceImpel implements ForgotPasswordService {
     @Transactional
     public void sendOtp(String email) {
         // Check if user exists
-        userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User with this email NOT FOUND!"));
 
         // Generate 6 digit OTP
@@ -45,9 +45,13 @@ public class ForgotPasswordServiceImpel implements ForgotPasswordService {
         otpRepository.save(otpEntity);
 
         // Send Email
-        String subject = "Password Reset OTP - HackMatch";
-        String message = "Your OTP for password reset is: " + otp + ". This OTP is valid for 5 minutes.";
-        emailService.sendEmail(email, subject, message);
+        try {
+            String subject = "Password Reset OTP - HackMatch";
+            String message = "Your OTP for password reset is: " + otp + ". This OTP is valid for 5 minutes.";
+            emailService.sendEmail(email, subject, message);
+        } catch (Exception e) {
+            throw new RuntimeException("FAILED to send email: " + e.getMessage());
+        }
     }
 
     @Override

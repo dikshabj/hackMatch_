@@ -1,6 +1,7 @@
 package com.substring.auth.auth_app_backend.controllers;
 
 import com.substring.auth.auth_app_backend.dtos.UserDto;
+import com.substring.auth.auth_app_backend.services.ProfileSyncService;
 import com.substring.auth.auth_app_backend.services.S3Service;
 import com.substring.auth.auth_app_backend.services.UserService;
 import lombok.AllArgsConstructor;
@@ -17,6 +18,12 @@ import java.util.Map;
 public class UserController {
     private final UserService userService;
     private final S3Service s3Service;
+    private final ProfileSyncService profileSyncService;
+
+    @PostMapping("/sync")
+    public ResponseEntity<UserDto> syncProfile(Principal principal) {
+        return ResponseEntity.ok(profileSyncService.syncUserProfile(principal.getName()));
+    }
 
     @PostMapping
     public ResponseEntity<UserDto> createUser(@RequestBody UserDto userDto) {

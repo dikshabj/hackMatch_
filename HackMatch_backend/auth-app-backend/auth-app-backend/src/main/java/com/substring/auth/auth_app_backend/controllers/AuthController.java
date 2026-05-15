@@ -2,6 +2,7 @@ package com.substring.auth.auth_app_backend.controllers;
 
 import com.substring.auth.auth_app_backend.dtos.LoginRequest;
 import com.substring.auth.auth_app_backend.dtos.UserDto;
+import com.substring.auth.auth_app_backend.dtos.ResetPasswordRequest;
 import com.substring.auth.auth_app_backend.entities.User;
 import com.substring.auth.auth_app_backend.repositories.UserRepository;
 import com.substring.auth.auth_app_backend.security.JwtService;
@@ -151,10 +152,9 @@ public class AuthController {
 
     // 3. Reset Password
     @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@RequestParam String email, @RequestParam String otp,
-            @RequestParam String newPassword) {
-        forgotPasswordService.resetPassword(email, otp, newPassword);
-        return ResponseEntity.ok("Password has been reset successfully.");
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+        forgotPasswordService.resetPassword(request.getEmail(), request.getOtp(), request.getNewPassword());
+        return ResponseEntity.ok("Password reset successful.");
     }
 
     // 4. Ping endpoint for UptimeRobot

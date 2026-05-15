@@ -39,6 +39,15 @@ public class UserDto {
     private boolean available;
     private String portfolioLink;
 
+    private String githubUsername;
+    private String leetcodeUsername;
+    private java.util.Map<String, Integer> githubStats;
+    private java.util.Map<String, Integer> leetcodeStats;
+    private long xp;
+    private String userRank;
+    private String status;
+    private Instant lastSync;
+
     // Transient field for AI match explanation
     private String matchReason;
     

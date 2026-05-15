@@ -9,6 +9,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.time.Instant;
 import java.util.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.time.Instant;
+import java.util.*;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -28,6 +32,7 @@ public class User implements UserDetails {
     private String username;
     @Column(name = "user_name", length = 500)
     private String name;
+    @JsonIgnore
     private String password;
     private String image;
     private boolean enable=true;
@@ -78,7 +83,7 @@ public class User implements UserDetails {
     @Column(length = 1000)
     private String bio;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "users_skills", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "skill")
     private Set<String> skills = new HashSet<>();
@@ -94,6 +99,33 @@ public class User implements UserDetails {
     private boolean available = true;
     
     private String portfolioLink;
+
+    // Gamification & Sync Fields
+    private String leetcodeUsername;
+    private String githubUsername;
+
+    @Builder.Default
+    private long xp = 0;
+
+    @Builder.Default
+    private String userRank = "Rookie";
+
+    @Builder.Default
+    private String status = "AVAILABLE"; // AVAILABLE, BUSY, HACKING, DEEP_WORK
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "user_github_stats", joinColumns = @JoinColumn(name = "user_id"))
+    @MapKeyColumn(name = "stat_key")
+    @Column(name = "stat_value")
+    private Map<String, Integer> githubStats;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "user_leetcode_stats", joinColumns = @JoinColumn(name = "user_id"))
+    @MapKeyColumn(name = "stat_key")
+    @Column(name = "stat_value")
+    private Map<String, Integer> leetcodeStats;
+
+    private Instant lastSync;
 
 
 
